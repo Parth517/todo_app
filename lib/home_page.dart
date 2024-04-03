@@ -1,7 +1,9 @@
 
 import 'package:flutter/material.dart';
+import 'package:todo_app/data/database.dart';
 import 'package:todo_app/utils/dialog_box.dart';
 import 'package:todo_app/utils/todo_tile.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -11,29 +13,31 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-
+  //refernece the hive box
+  final _myBox=Hive.openBox('myBox');
+  ToDoDataBase db =ToDoDataBase();
 
   //text Controller
   final _controller=TextEditingController();
 
   //list todp tasks=
-  List ToDoList=[
-    ["Make Breakfast",false],
-    ['Do Exercise',false],
-  ];
+
 
   //checkbox was tapped
   void checkBoxChanged(bool? value,int index){
     setState(() {
-      ToDoList[index][1]=!ToDoList[index][1];
+      db.ToDoList[index][1]=!db.ToDoList[index][1];
     });
 
   }
 
    void saveNewTask(){
     setState(() {
-      ToDoList.add([_controller.text,false]);
+      db.ToDoList.add([_controller.text,false]);
+      _controller.clear();
     });
+    Navigator.of(context).pop();
+
    }
 
   //create a new task
@@ -46,6 +50,13 @@ class _HomePageState extends State<HomePage> {
       );
      },
      );
+  }
+
+  //Delete Task
+  void deleteTask(int index){
+    setState(() {
+      db.ToDoList.removeAt(index);
+    });
   }
 
   @override
@@ -63,12 +74,13 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: Colors.yellow,
         ),
       body: ListView.builder(
-        itemCount: ToDoList.length,
+        itemCount: db.ToDoList.length,
         itemBuilder: (context,index){
           return ToDoTile(
-            taskName: ToDoList[index][0],
-            taskCompleted: ToDoList[index][1],
+            taskName: db.ToDoList[index][0],
+            taskCompleted: db.ToDoList[index][1],
               onChanged: (value) =>checkBoxChanged(value,index),
+              deleteFunction:(context) => deleteTask(index),
           );
         },
       )
